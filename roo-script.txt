@@ -1,0 +1,27 @@
+project --topLevelPackage org.swinchester.roo.quickstarts.changelog
+jpa setup --provider HIBERNATE --database MYSQL --databaseName changelog --userName root --password
+
+entity jpa --class ~.Person --activeRecord false --testAutomatically
+field string --fieldName personIdentifier
+field string --fieldName givenName
+field string --fieldName familyName
+field string --fieldName gender
+field string --fieldName address
+field string --fieldName city
+repository jpa --interface ~.PersonRepository --entity ~.Person
+
+entity jpa --class ~.EventLog --activeRecord false --table EVENTLOG --identifierField recordId --identifierColumn RECORD_ID --identifierType java.lang.Long --testAutomatically
+field string --fieldName tableKey --column TABLE_KEY --sizeMax 100
+field string --fieldName status --column STATUS --sizeMax 1
+field number --fieldName eventType --column EVENT_TYPE --type java.lang.Integer
+field date --fieldName eventTime --column EVENT_TIME --type java.util.Date --persistenceType JPA_TIMESTAMP
+field string --fieldName perpatrator --column PERPETRATOR --sizeMax 40
+field string --fieldName tableName --column TABLE_NAME --sizeMax 40
+field string --fieldName columnName --column COLUMN_NAME --sizeMax 40
+field string --fieldName oldValue --column OLD_VALUE --sizeMax 255
+field string --fieldName newValue --column NEW_VALUE --sizeMax 255
+repository jpa --interface ~.EventLogRepository --entity ~.EventLog
+
+entity jpa --class ~.CamelLastEventProcessed --table CAMEL_LAST_EVENTID --activeRecord false --testAutomatically
+field number --fieldName eventId --column EVENT_ID --type java.lang.Long
+repository jpa --interface ~.CamelLastEventProcessedRepository --entity ~.CamelLastEventProcessed
