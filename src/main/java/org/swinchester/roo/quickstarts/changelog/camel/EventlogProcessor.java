@@ -6,6 +6,8 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.swinchester.roo.quickstarts.changelog.EventLog;
 import org.swinchester.roo.quickstarts.changelog.EventLogRepository;
@@ -23,6 +25,8 @@ public class EventlogProcessor implements Processor {
 
     private static int ADD_EVENT_TYPE = 1;
     private static int MODIFY_EVENT_TYPE = 3;
+
+    Logger log = LoggerFactory.getLogger(EventlogProcessor.class);
 
     @Autowired
     protected EventLogRepository eventLogRepository;
@@ -93,11 +97,11 @@ public class EventlogProcessor implements Processor {
         try {
             tableKeyValue = (String) propUtils.getProperty(newObject, tableKeyProperty);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         }
 
         fullTableKeyValue = tableKeyPrefix + tableKeyValue;
@@ -108,7 +112,7 @@ public class EventlogProcessor implements Processor {
             try {
                 EventLog elRow = (EventLog) BeanUtils.cloneBean(el);
                 String propertyName = (String) propNameObject;
-                System.out.print("trying property : " + propertyName);
+                log.debug("trying property : " + propertyName);
                 Object property1 = propUtils.getProperty(newObject, propertyName);
                 elRow.setTableName(tableName);
                 elRow.setTableKey(fullTableKeyValue);
@@ -118,15 +122,15 @@ public class EventlogProcessor implements Processor {
                 eventLogList.add(elRow);
 
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             } catch (InstantiationException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }catch(Exception ex){
-                System.out.print("IGNORING property");
+                log.debug("IGNORING property");
             }
         }
 
@@ -149,11 +153,11 @@ public class EventlogProcessor implements Processor {
         try {
             tableKeyValue = (String) propUtils.getProperty(newObject, tableKeyProperty);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            log.error(e.toString(), e);
         }
 
         fullTableKeyValue = tableKeyPrefix + tableKeyValue;
@@ -166,9 +170,9 @@ public class EventlogProcessor implements Processor {
                 Object property1 = propUtils.getProperty(oldObject, propertyName);
                 Object property2 = propUtils.getProperty(newObject, propertyName);
                 if(!propertyName.equalsIgnoreCase("version")){
-                    System.out.print("trying property : " + propertyName);
+                    log.debug("trying property : " + propertyName);
                     if (property1.equals(property2)) {
-                        System.out.println("  " + propertyName + " is equal");
+                        log.debug("  " + propertyName + " is equal");
                     } else {
                         EventLog elRow = (EventLog) BeanUtils.cloneBean(el);
                         elRow.setTableKey(fullTableKeyValue);
@@ -177,13 +181,13 @@ public class EventlogProcessor implements Processor {
                         elRow.setOldValue((String) property1);
                         elRow.setNewValue((String) property2);
 
-                        System.out.println("> " + propertyName + " is different (oldValue=\"" + property1 + "\", newValue=\"" + property2 + "\")");
+                        log.debug("> " + propertyName + " is different (oldValue=\"" + property1 + "\", newValue=\"" + property2 + "\")");
                         eventLogList.add(elRow);
                     }
                 }
 
             } catch (InstantiationException e) {
-                e.printStackTrace();
+                log.error(e.toString(), e);
             }
         }
 
