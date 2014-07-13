@@ -3,15 +3,12 @@
 
 package org.swinchester.roo.quickstarts.changelog;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.swinchester.roo.quickstarts.changelog.Person;
 import org.swinchester.roo.quickstarts.changelog.PersonRepository;
 
 privileged aspect PersonRepository_Roo_Jpa_Repository {
-    
-    declare parents: PersonRepository extends JpaRepository<Person, Long>;
     
     declare parents: PersonRepository extends JpaSpecificationExecutor<Person>;
     
