@@ -3,15 +3,12 @@
 
 package org.swinchester.roo.quickstarts.changelog;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import org.swinchester.roo.quickstarts.changelog.EventLog;
 import org.swinchester.roo.quickstarts.changelog.EventLogRepository;
 
 privileged aspect EventLogRepository_Roo_Jpa_Repository {
-    
-    declare parents: EventLogRepository extends JpaRepository<EventLog, Long>;
     
     declare parents: EventLogRepository extends JpaSpecificationExecutor<EventLog>;
     

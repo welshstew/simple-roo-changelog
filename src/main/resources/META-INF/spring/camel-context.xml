@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring" xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <util:map id="entityMetaDataMap" map-class="java.util.HashMap" key-type="java.lang.String" value-type="org.swinchester.roo.quickstarts.changelog.camel.EntityMetaData">
+        <entry key="Person" value-ref="metaPerson" />
+    </util:map>
+
+    <bean id="metaPerson" class="org.swinchester.roo.quickstarts.changelog.camel.EntityMetaData">
+        <property name="entityName" value="Person"/>
+        <property name="entityTableKeyColumn" value="personIdentifier" />
+        <property name="entityTableKeyPrefix" value="PERSONKEY=" />
+        <property name="entityTableName" value="Person" />
+    </bean>
+
+    <bean id="eventlogProcessor" class="org.swinchester.roo.quickstarts.changelog.camel.EventlogProcessor">
+        <property name="entityMetaDataMap" ref="entityMetaDataMap" />
+    </bean>
+    <bean id="entityRevisionProcessor" class="org.swinchester.roo.quickstarts.changelog.camel.EntityRevisionProcessor" />
+    <bean id="lastEventIncrementerProcessor" class="org.swinchester.roo.quickstarts.changelog.camel.LastEventIncrementerProcessor" />
+
+    <bean id="jpa" class="org.apache.camel.component.jpa.JpaComponent">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+        <property name="transactionManager" ref="transactionManager" />
+    </bean>
+
+
+    <!-- use camel jpa trace so we can see all the traced exchanges in a database -->
+    <bean id="camelTracer" class="org.apache.camel.processor.interceptor.Tracer">
+        <!-- turn on jpa tracing, otherwise the TraceEventMessage is a non JPA Entity class -->
+        <property name="useJpa" value="true"/>
+        <!-- the destination to send the traced messages -->
+        <property name="destination" ref="traced"/>
+        <!-- we turn ordinary trace logging off so we only see the traced messages in the database,
+             but you can have both if you like -->
+        <property name="logLevel" value="OFF"/>
+    </bean>
+
+    <camel:endpoint id="traced" uri="jpa://org.apache.camel.processor.interceptor.JpaTraceEventMessage?persistenceUnit=persistenceUnit"/>
+
+    <camel:template id="producerTemplate" camelContextId="camelContext" />
+
+
+    <camel:camelContext id="camelContext" xmlns="http://camel.apache.org/schema/spring" trace="true" autoStartup="true">
+        <route>
+            <from uri="sql:SELECT * FROM changelog.revchanges where rev > (SELECT EVENT_ID FROM changelog.camel_last_eventid)?dataSource=dataSource&amp;consumer.delay=30000"/>
+            <to uri="direct:processEventlog" />
+        </route>
+        <route>
+            <from uri="direct:processEventlog" />
+            <process ref="entityRevisionProcessor"/>
+            <process ref="eventlogProcessor"/>
+            <process ref="lastEventIncrementerProcessor"/>
+        </route>
+        <route>
+            <from uri="seda:eventLogDistributor" />
+            <to uri="log:org.swinchester.roo.quickstarts?showAll=true" />
+        </route>
+    </camel:camelContext>
+
+</beans>
